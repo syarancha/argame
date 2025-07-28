@@ -3,12 +3,12 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>MindAR 3D 오브젝트 데모</title>
+    <title>MindAR 3D 캐릭터 게임 데모</title>
     <!--
-      이 예제는 MindAR.js와 A‑Frame을 사용하여 이미지 타깃을 인식하면 3D 오브젝트(GLB)를 띄우는 방법을 보여줍니다.
-      사용자가 포스터(타깃 이미지)를 카메라로 비추면 업로드한 3D 모델이 나타나고, 클릭하면 회전합니다.
+      이 예제는 MindAR.js와 A‑Frame을 사용하여 이미지 타깃을 인식하면 3D 오브젝트(GLB)를 띄우고,
+      사용자가 클릭 또는 터치할 때마다 점수를 증가시키는 간단한 AR 게임을 보여줍니다.
 
-      사전 준비:
+      준비 파일:
       - targets.mind : 타깃 포스터 이미지를 MindAR 컴파일러로 변환한 파일. 같은 폴더에 두세요.
       - 3dcharacter.glb : 표시할 3D 모델 파일. 같은 폴더에 두세요.
     -->
@@ -34,7 +34,7 @@
         <a-asset-item id="characterModel" src="3dcharacter.glb"></a-asset-item>
       </a-assets>
 
-      <!-- 카메라 설정: 커서를 사용하여 모델을 클릭 가능하게 만듭니다. -->
+      <!-- 카메라 설정: 마우스/터치 커서를 사용하여 모델을 클릭 가능하게 만듭니다. -->
       <a-camera
         position="0 0 0"
         look-controls="enabled: false"
@@ -42,18 +42,20 @@
         raycaster="objects: .clickable"
       ></a-camera>
 
-      <!-- MindAR 타겟: targetIndex 0 을 사용합니다. -->
+      <!-- MindAR 타겟: targetIndex 0을 사용합니다. -->
       <a-entity mindar-image-target="targetIndex: 0">
-        <!-- 3D 모델을 배치합니다. 초기 scale 을 조절하여 크기를 맞춥니다. -->
+        <!-- 3D 모델을 배치합니다. 회전을 Y축으로 수정하여 모델이 사용자 쪽을 향하도록 합니다.
+             모델에 .clickable 클래스를 추가하여 Raycaster가 인식할 수 있게 합니다. -->
         <a-gltf-model
           id="arModel"
           class="clickable"
           src="#characterModel"
           position="0 0 0.1"
-          rotation="0 0 0"
+          rotation="0 90 0"  <!-- 필요에 따라 0 90 0 또는 0 180 0으로 조정하세요 -->
           scale="0.4 0.4 0.4"
         ></a-gltf-model>
-        <!-- 점수 표시용 텍스트. 클릭 횟수를 보여줍니다. -->
+
+        <!-- 점수 표시용 텍스트. 클릭/터치 횟수를 보여줍니다. -->
         <a-text
           id="scoreText"
           value="Score: 0"
@@ -73,14 +75,22 @@
       let rotate = false;
       let score = 0;
 
-      // 클릭 시: 회전 상태를 토글하고 점수를 증가시킵니다.
-      modelEl.addEventListener('click', () => {
+      // 인터랙션 핸들러: 회전 상태를 토글하고 점수를 증가시킵니다.
+      function handleInteraction(event) {
+        // 모바일 브라우저에서 touchstart와 click 이벤트가 동시에 발생하는 것을 방지
+        if (event.type === 'touchstart') {
+          event.preventDefault();
+        }
         rotate = !rotate;
         score += 1;
         scoreTextEl.setAttribute('value', 'Score: ' + score);
-      });
+      }
 
-      // 애니메이션 루프: rotate 값이 true 일 때 모델을 회전시킵니다.
+      // 데스크톱과 모바일 환경 모두에서 동작하도록 click과 touchstart 이벤트를 모두 설정합니다.
+      modelEl.addEventListener('click', handleInteraction);
+      modelEl.addEventListener('touchstart', handleInteraction);
+
+      // 애니메이션 루프: rotate 값이 true일 때 모델을 회전시킵니다.
       function tick() {
         if (rotate) {
           const rotation = modelEl.getAttribute('rotation');
