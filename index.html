@@ -53,21 +53,37 @@
           rotation="0 0 0"
           scale="0.4 0.4 0.4"
         ></a-gltf-model>
+        <!-- 점수 표시용 텍스트. 클릭 횟수를 보여줍니다. -->
+        <a-text
+          id="scoreText"
+          value="Score: 0"
+          position="0 -0.8 0"
+          align="center"
+          color="#FFFFFF"
+          width="2"
+        ></a-text>
       </a-entity>
     </a-scene>
 
     <script>
-      // 간단한 인터랙션: 모델을 클릭하면 회전 방향을 변경합니다.
+      // 모델과 점수 텍스트 엘리먼트 참조
       const modelEl = document.querySelector('#arModel');
+      const scoreTextEl = document.querySelector('#scoreText');
       let rotate = false;
+      let score = 0;
+
+      // 클릭 시: 회전 상태를 토글하고 점수를 증가시킵니다.
       modelEl.addEventListener('click', () => {
         rotate = !rotate;
+        score += 1;
+        scoreTextEl.setAttribute('value', 'Score: ' + score);
       });
+
       // 애니메이션 루프: rotate 값이 true 일 때 모델을 회전시킵니다.
       function tick() {
         if (rotate) {
           const rotation = modelEl.getAttribute('rotation');
-          rotation.y += 1; // 매 프레임마다 y축 회전
+          rotation.y += 1;
           modelEl.setAttribute('rotation', rotation);
         }
         requestAnimationFrame(tick);
