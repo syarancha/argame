@@ -3,14 +3,14 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>MindAR 3D 캐릭터 게임 데모</title>
+    <title>MindAR 3D 캐릭터 게임</title>
     <!--
-      이 예제는 MindAR.js와 A‑Frame을 사용하여 이미지 타깃을 인식하면 3D 오브젝트(GLB)를 띄우고,
-      사용자가 클릭 또는 터치할 때마다 점수를 증가시키는 간단한 AR 게임을 보여줍니다.
+      포스터를 스캔하면 3D 캐릭터가 나타나며, 화면 아무 곳이나 탭/클릭할 때마다 점수가 올라갑니다.
+      캐릭터는 사용자를 향하도록 회전값을 조정했습니다. 모델 방향이 맞지 않으면 rotation 값의 두 번째 숫자(Y축)를 변경해 보세요.
 
-      준비 파일:
-      - targets.mind : 타깃 포스터 이미지를 MindAR 컴파일러로 변환한 파일. 같은 폴더에 두세요.
-      - 3dcharacter.glb : 표시할 3D 모델 파일. 같은 폴더에 두세요.
+      필요 파일:
+      - targets.mind : 이미지 트래킹을 위한 파일
+      - 3dcharacter.glb : 표시할 3D 모델
     -->
     <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
@@ -19,22 +19,18 @@
     </style>
   </head>
   <body>
-    <!-- MindAR 이미지 추적 설정: targets.mind 파일을 사용합니다. -->
     <a-scene
       mindar-image="imageTargetSrc: targets.mind;"
       vr-mode-ui="enabled: false"
       device-orientation-permission-ui="enabled: false"
-      color-space="sRGB"
       renderer="colorManagement: true, physicallyCorrectLights"
       embedded
       style="width: 100vw; height: 100vh;"
     >
-      <!-- 3D 모델 에셋을 로드합니다. glTF/GLB 파일을 사용합니다. -->
       <a-assets>
         <a-asset-item id="characterModel" src="3dcharacter.glb"></a-asset-item>
       </a-assets>
 
-      <!-- 카메라 설정: 마우스/터치 커서를 사용하여 모델을 클릭 가능하게 만듭니다. -->
       <a-camera
         position="0 0 0"
         look-controls="enabled: false"
@@ -42,20 +38,16 @@
         raycaster="objects: .clickable"
       ></a-camera>
 
-      <!-- MindAR 타겟: targetIndex 0을 사용합니다. -->
       <a-entity mindar-image-target="targetIndex: 0">
-        <!-- 3D 모델을 배치합니다. 회전을 Y축으로 수정하여 모델이 사용자 쪽을 향하도록 합니다.
-             모델에 .clickable 클래스를 추가하여 Raycaster가 인식할 수 있게 합니다. -->
         <a-gltf-model
           id="arModel"
           class="clickable"
           src="#characterModel"
           position="0 0 0.1"
-          rotation="0 90 0"  <!-- 필요에 따라 0 90 0 또는 0 180 0으로 조정하세요 -->
+          rotation="0 270 0"
           scale="0.4 0.4 0.4"
         ></a-gltf-model>
 
-        <!-- 점수 표시용 텍스트. 클릭/터치 횟수를 보여줍니다. -->
         <a-text
           id="scoreText"
           value="Score: 0"
@@ -69,15 +61,14 @@
     </a-scene>
 
     <script>
-      // 모델과 점수 텍스트 엘리먼트 참조
       const modelEl = document.querySelector('#arModel');
       const scoreTextEl = document.querySelector('#scoreText');
+      const sceneEl = document.querySelector('a-scene');
       let rotate = false;
       let score = 0;
 
-      // 인터랙션 핸들러: 회전 상태를 토글하고 점수를 증가시킵니다.
       function handleInteraction(event) {
-        // 모바일 브라우저에서 touchstart와 click 이벤트가 동시에 발생하는 것을 방지
+        // 모바일 환경에서 터치와 클릭이 중복되지 않도록 preventDefault
         if (event.type === 'touchstart') {
           event.preventDefault();
         }
@@ -86,11 +77,10 @@
         scoreTextEl.setAttribute('value', 'Score: ' + score);
       }
 
-      // 데스크톱과 모바일 환경 모두에서 동작하도록 click과 touchstart 이벤트를 모두 설정합니다.
-      modelEl.addEventListener('click', handleInteraction);
-      modelEl.addEventListener('touchstart', handleInteraction);
+      // 화면 어디를 터치/클릭하더라도 점수가 올라가도록 전체 씬에 이벤트를 연결합니다.
+      sceneEl.addEventListener('click', handleInteraction);
+      sceneEl.addEventListener('touchstart', handleInteraction);
 
-      // 애니메이션 루프: rotate 값이 true일 때 모델을 회전시킵니다.
       function tick() {
         if (rotate) {
           const rotation = modelEl.getAttribute('rotation');
